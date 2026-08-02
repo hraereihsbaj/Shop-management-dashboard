@@ -145,7 +145,7 @@ export async function uploadProducts(req: Request, res: Response): Promise<void>
 
 export async function getProductHistory(req: Request, res: Response): Promise<void> {
   try {
-    const id = req.params.id;
+    const id = req.params.id as string;
     const history = await productService.getProductHistory(id);
     res.status(200).json({ success: true, data: history });
   } catch (error: any) {
