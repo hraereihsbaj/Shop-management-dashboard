@@ -217,6 +217,22 @@ export default function App() {
     }
   };
 
+  const refreshDataPreservingPagination = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchReport(selectedMonth, selectedYear, selectedDate),
+        fetchProducts(productsPagination.page, selectedMonth, selectedYear, sortOrder, selectedDate),
+        fetchAllProductsForDatalist(),
+        fetchSales(salesPagination.page, selectedMonth, selectedYear, sortOrder, selectedDate),
+        fetchExpenses(expensesPagination.page, selectedMonth, selectedYear, sortOrder, selectedDate),
+        fetchChartData(chartPeriod),
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) fetchAllData();
   }, [isAuthenticated]);
@@ -726,17 +742,17 @@ export default function App() {
       <ProductDrawer 
         product={selectedProductForDrawer} 
         onClose={() => setSelectedProductForDrawer(null)}
-        onSaved={() => fetchAllData()}
+        onSaved={refreshDataPreservingPagination}
       />
       <SaleDrawer
         sale={selectedSaleForDrawer}
         onClose={() => setSelectedSaleForDrawer(null)}
-        onSaved={() => fetchAllData()}
+        onSaved={refreshDataPreservingPagination}
       />
       <ExpenseDrawer
         expense={selectedExpenseForDrawer}
         onClose={() => setSelectedExpenseForDrawer(null)}
-        onSaved={() => fetchAllData()}
+        onSaved={refreshDataPreservingPagination}
       />
       
       <BulkImportModal
