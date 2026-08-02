@@ -246,10 +246,15 @@ export function initializeBot() {
 
         pendingSale.data.quantity = value;
         pendingSale.step = 3;
-        return bot.sendMessage(chatId, "💳 Please send the payment method.");
+        const pmOptions = ['UPI', 'Cash', 'Card', 'Bank Transfer', 'Other'].join(', ');
+        return bot.sendMessage(chatId, `💳 Please send the payment method.\n_(Options: ${pmOptions})_`, { parse_mode: "Markdown" });
       }
 
       if (pendingSale.step === 3) {
+        const validPayments = ['upi', 'cash', 'card', 'bank transfer', 'other'];
+        if (!validPayments.includes(value.toLowerCase())) {
+          return bot.sendMessage(chatId, "⚠️ Invalid payment method. Please enter one of: UPI, Cash, Card, Bank Transfer, Other.");
+        }
         pendingSale.data.paymentMethod = value;
 
         try {
@@ -473,7 +478,20 @@ export function initializeBot() {
         const updatedStr = p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : "—";
         message += `🔹 *ID:* \`${p.id}\` | *${p.name}*\n   Category: ${p.category || '—'}\n   Sell: ₹${p.sellingPrice} | Cost: ₹${p.costPrice}\n   Stock: ${p.stock} pcs\n   📅 Created: ${dateStr} | Updated: ${updatedStr}\n\n`;
       });
-      bot.sendMessage(chatId, message, { parse_mode: "Markdown" });
+      const messageText = message.trim();
+      // Split message if it exceeds Telegram's limit
+      if (messageText.length > 3900) {
+        const chunks = [];
+        let chunk = '';
+        for (const line of messageText.split('\n')) {
+          if (chunk.length + line.length + 1 > 3900) { chunks.push(chunk); chunk = line; }
+          else { chunk += (chunk ? '\n' : '') + line; }
+        }
+        if (chunk) chunks.push(chunk);
+        for (const c of chunks) bot.sendMessage(chatId, c, { parse_mode: "Markdown" });
+      } else {
+        bot.sendMessage(chatId, messageText, { parse_mode: "Markdown" });
+      }
     } catch (error) {
       console.error(error);
       bot.sendMessage(chatId, "❌ Failed to fetch products.");
@@ -495,7 +513,7 @@ export function initializeBot() {
 
       if (!product) {
         const products = await prisma.product.findMany({
-          where: { name: { contains: query, mode: "insensitive" } }
+          where: { name: { contains: query, mode: "insensitive" }, isActive: true }
         });
         product = products[0] || null;
       }
@@ -542,7 +560,19 @@ export function initializeBot() {
         const itemDetails = s.items.map((i: any) => `• ${i.quantity}x ${i.product?.name || 'Item'} | SP: ₹${i.sellingPrice} | CP: ₹${i.costPrice}`).join('\n   ');
         message += `🔹 *ID:* \`${s.id}\` | *Total:* ₹${s.totalAmount}\n   Payment: ${s.paymentMethod}\n   Items:\n   ${itemDetails}\n   📅 Date: ${dateStr}\n\n`;
       });
-      bot.sendMessage(chatId, message, { parse_mode: "Markdown" });
+      const salesMessage = message.trim();
+      if (salesMessage.length > 3900) {
+        const chunks: string[] = [];
+        let chunk = '';
+        for (const line of salesMessage.split('\n')) {
+          if (chunk.length + line.length + 1 > 3900) { chunks.push(chunk); chunk = line; }
+          else { chunk += (chunk ? '\n' : '') + line; }
+        }
+        if (chunk) chunks.push(chunk);
+        for (const c of chunks) bot.sendMessage(chatId, c, { parse_mode: "Markdown" });
+      } else {
+        bot.sendMessage(chatId, salesMessage, { parse_mode: "Markdown" });
+      }
     } catch (error) {
       console.error(error);
       bot.sendMessage(chatId, "❌ Failed to fetch sales records.");
@@ -579,7 +609,19 @@ export function initializeBot() {
         const notes = e.notes ? `\n   Notes: ${e.notes}` : '';
         message += `🔹 *ID:* \`${e.id}\` | *${e.title}*\n   Category: ${e.category || '—'}\n   Amount: ₹${e.amount}${notes}\n   📅 Date: ${dateStr}\n\n`;
       });
-      bot.sendMessage(chatId, message, { parse_mode: "Markdown" });
+      const expMessage = message.trim();
+      if (expMessage.length > 3900) {
+        const chunks: string[] = [];
+        let chunk = '';
+        for (const line of expMessage.split('\n')) {
+          if (chunk.length + line.length + 1 > 3900) { chunks.push(chunk); chunk = line; }
+          else { chunk += (chunk ? '\n' : '') + line; }
+        }
+        if (chunk) chunks.push(chunk);
+        for (const c of chunks) bot.sendMessage(chatId, c, { parse_mode: "Markdown" });
+      } else {
+        bot.sendMessage(chatId, expMessage, { parse_mode: "Markdown" });
+      }
     } catch (error) {
       console.error(error);
       bot.sendMessage(chatId, "❌ Failed to fetch expenses records.");

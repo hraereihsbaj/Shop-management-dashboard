@@ -104,14 +104,19 @@ export async function uploadSales(req: Request, res: Response): Promise<void> {
         continue;
       }
 
-      // Find product (case insensitive)
+      // Find active product (case insensitive)
       const found = await prisma.product.findMany({
-        where: { name: { contains: productName, mode: "insensitive" } }
+        where: { name: { contains: productName, mode: "insensitive" }, isActive: true }
       });
       const product = found[0];
 
       if (!product) {
         errors.push(`Row ${i + 1}: Product "${productName}" does not exist in inventory. Skipped.`);
+        continue;
+      }
+
+      if (product.stock < quantity) {
+        errors.push(`Row ${i + 1}: Insufficient stock for "${product.name}". Available: ${product.stock}, Requested: ${quantity}. Skipped.`);
         continue;
       }
 
