@@ -78,11 +78,11 @@ export async function getProfitAndLoss(month?: number, year?: number, date?: str
   const netProfit = grossProfit - totalExpenses;
   
   for (const p of products) {
-    if (p.stock > 0) {
+    if (p.isActive && p.stock > 0) {
       totalInventoryValue += Number(p.costPrice) * p.stock;
     }
     const soldStockCost = p.saleItems?.reduce((sum, item) => sum + (Number(item.costPrice) * item.quantity), 0) || 0;
-    const currentStockCost = p.stock > 0 ? (Number(p.costPrice) * p.stock) : 0;
+    const currentStockCost = (p.isActive && p.stock > 0) ? (Number(p.costPrice) * p.stock) : 0;
     totalInitialCosts += soldStockCost + currentStockCost;
   }
 
