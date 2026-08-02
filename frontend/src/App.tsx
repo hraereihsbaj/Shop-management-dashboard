@@ -725,15 +725,18 @@ export default function App() {
 
       <ProductDrawer 
         product={selectedProductForDrawer} 
-        onClose={() => setSelectedProductForDrawer(null)} 
+        onClose={() => setSelectedProductForDrawer(null)}
+        onSaved={() => fetchAllData()}
       />
       <SaleDrawer
         sale={selectedSaleForDrawer}
         onClose={() => setSelectedSaleForDrawer(null)}
+        onSaved={() => fetchAllData()}
       />
       <ExpenseDrawer
         expense={selectedExpenseForDrawer}
         onClose={() => setSelectedExpenseForDrawer(null)}
+        onSaved={() => fetchAllData()}
       />
       
       <BulkImportModal

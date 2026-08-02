@@ -61,6 +61,16 @@ export async function deleteSale(req: Request, res: Response) {
   }
 }
 
+export async function updateSale(req: Request, res: Response) {
+  try {
+    const id = String(req.params.id);
+    const updated = await saleService.updateSale(id, req.body);
+    res.status(200).json({ success: true, message: "Sale updated successfully", data: updated });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message || "Failed to update sale" });
+  }
+}
+
 export async function uploadSales(req: Request, res: Response): Promise<void> {
   try {
     if (!req.file) {

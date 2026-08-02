@@ -130,6 +130,14 @@ export async function deleteSale(id: string) {
   });
 }
 
+export async function updateSale(id: string, data: { paymentMethod?: string }) {
+  return await prisma.sale.update({
+    where: { id },
+    data,
+    include: { items: { include: { product: true } } }
+  });
+}
+
 export async function bulkCreateSales(sales: any[]) {
   const results = { success: 0, failed: 0, errors: [] as string[] };
   
