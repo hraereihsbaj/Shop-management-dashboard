@@ -7,8 +7,8 @@ interface Product {
 
 interface QuickActionsProps {
   // Sale form
-  saleForm: { productName: string; quantity: string; paymentMethod: string };
-  setSaleForm: (f: { productName: string; quantity: string; paymentMethod: string }) => void;
+  saleForm: { productName: string; quantity: string; paymentMethod: string; isCustom: boolean; customPrice: string };
+  setSaleForm: (f: { productName: string; quantity: string; paymentMethod: string; isCustom: boolean; customPrice: string }) => void;
   handleAddSale: (e: React.FormEvent) => void;
   allProducts: Product[];
 
@@ -59,8 +59,19 @@ export default function QuickActions({
             <h3 className="text-sm font-bold text-gray-900">Log a Sale</h3>
           </div>
           <form onSubmit={handleAddSale} className="space-y-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="sale-product" className="block text-xs font-medium text-gray-500">Product Name</label>
+              <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  checked={saleForm.isCustom}
+                  onChange={(e) => setSaleForm({ ...saleForm, isCustom: e.target.checked })}
+                />
+                Custom Item
+              </label>
+            </div>
             <div>
-              <label htmlFor="sale-product" className="block text-xs font-medium text-gray-500 mb-1.5">Product</label>
               <input
                 id="sale-product"
                 list="product-options"
@@ -71,12 +82,30 @@ export default function QuickActions({
                 value={saleForm.productName}
                 onChange={(e) => setSaleForm({ ...saleForm, productName: e.target.value })}
               />
-              <datalist id="product-options">
-                {allProducts.map((product) => (
-                  <option key={product.id} value={product.name} />
-                ))}
-              </datalist>
+              {!saleForm.isCustom && (
+                <datalist id="product-options">
+                  {allProducts.map((product) => (
+                    <option key={product.id} value={product.name} />
+                  ))}
+                </datalist>
+              )}
             </div>
+            {saleForm.isCustom && (
+              <div>
+                <label htmlFor="sale-custom-price" className="block text-xs font-medium text-gray-500 mb-1.5">Selling Price (₹)</label>
+                <input
+                  id="sale-custom-price"
+                  type="number"
+                  required
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  className="form-input"
+                  value={saleForm.customPrice}
+                  onChange={(e) => setSaleForm({ ...saleForm, customPrice: e.target.value })}
+                />
+              </div>
+            )}
             <div className="grid grid-cols-5 gap-3">
               <div className="col-span-2">
                 <label htmlFor="sale-qty" className="block text-xs font-medium text-gray-500 mb-1.5">Qty</label>

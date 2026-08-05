@@ -7,6 +7,7 @@ interface SaleItem {
   quantity: number;
   costPrice?: number;
   sellingPrice?: number;
+  productName?: string;
   product?: { name: string; category?: string };
 }
 
@@ -158,7 +159,7 @@ export default function SaleDrawer({ sale, onClose, onSaved }: SaleDrawerProps) 
               return (
                 <div key={idx} className="flex justify-between items-center p-4 bg-white border border-gray-100 shadow-sm rounded-xl">
                   <div>
-                    <p className="font-bold text-gray-900">{item.product?.name || 'Unknown Product'}</p>
+                    <p className="font-bold text-gray-900">{item.productName || item.product?.name || 'Unknown Product'}</p>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {item.quantity} x ₹{Number(item.sellingPrice || 0).toFixed(2)}
                     </p>

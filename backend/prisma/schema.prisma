@@ -68,8 +68,10 @@ model SaleItem {
   saleId        String
   sale          Sale      @relation(fields: [saleId], references: [id])
 
-  productId     String
-  product       Product   @relation(fields: [productId], references: [id])
+  productName   String?
+
+  productId     String?
+  product       Product?  @relation(fields: [productId], references: [id])
 }
 
 model ProductHistory {

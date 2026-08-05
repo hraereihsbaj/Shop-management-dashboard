@@ -2,10 +2,13 @@ import { z } from "zod";
 
 // Validate individual items in the cart
 const saleItemSchema = z.object({
-  productId: z.string().min(1, "Product ID is required"),
+  productId: z.string().optional(),
+  productName: z.string().optional(),
   quantity: z.number().int().positive("Quantity must be greater than 0"),
   costPrice: z.number().nonnegative(),
   sellingPrice: z.number().nonnegative()
+}).refine(data => data.productId || data.productName, {
+  message: "Either productId or productName must be provided"
 });
 
 // Validate the overall sale

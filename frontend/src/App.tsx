@@ -111,7 +111,7 @@ export default function App() {
   const [expensesPagination, setExpensesPagination] = useState<PaginationInfo>({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 1 });
 
   const [expenseForm, setExpenseForm] = useState({ title: '', category: '', amount: '', notes: '' });
-  const [saleForm, setSaleForm] = useState({ productName: '', quantity: '', paymentMethod: 'UPI' });
+  const [saleForm, setSaleForm] = useState({ productName: '', quantity: '', paymentMethod: 'UPI', isCustom: false, customPrice: '' });
   const [productForm, setProductForm] = useState({ name: '', category: '', sellingPrice: '', costPrice: '', stock: '' });
 
   const [selectedMonth, setSelectedMonth] = useState<string>(''); // '' = All Time
@@ -348,15 +348,16 @@ export default function App() {
 
     const productName = saleForm.productName.trim();
     const quantity = Number(saleForm.quantity);
-    const selectedProduct = allProducts.find((p) => p.name.toLowerCase() === productName.toLowerCase());
+    const isCustom = saleForm.isCustom;
+    const customPrice = Number(saleForm.customPrice);
 
     if (!productName || !saleForm.quantity) {
       alert('Please fill out all required fields (Product Name and Quantity).');
       return;
     }
 
-    if (!selectedProduct) {
-      alert(`Product "${productName}" not found. Please choose an existing product from inventory.`);
+    if (isCustom && (!saleForm.customPrice || customPrice < 0 || Number.isNaN(customPrice))) {
+      alert('Please provide a valid non-negative selling price for the custom item.');
       return;
     }
 
@@ -365,21 +366,43 @@ export default function App() {
       return;
     }
 
-    const payload = {
-      paymentMethod: saleForm.paymentMethod,
-      totalAmount: Number(selectedProduct.sellingPrice) * quantity,
-      items: [{
-        productId: String(selectedProduct.id),
-        quantity,
-        costPrice: Number(selectedProduct.costPrice),
-        sellingPrice: Number(selectedProduct.sellingPrice)
-      }]
-    };
+    let payload: any;
+
+    if (isCustom) {
+      payload = {
+        paymentMethod: saleForm.paymentMethod,
+        totalAmount: customPrice * quantity,
+        items: [{
+          productName: productName,
+          quantity,
+          costPrice: 0,
+          sellingPrice: customPrice
+        }]
+      };
+    } else {
+      const selectedProduct = allProducts.find((p) => p.name.toLowerCase() === productName.toLowerCase());
+
+      if (!selectedProduct) {
+        alert(`Product "${productName}" not found. Please choose an existing product or toggle 'Custom Item'.`);
+        return;
+      }
+
+      payload = {
+        paymentMethod: saleForm.paymentMethod,
+        totalAmount: Number(selectedProduct.sellingPrice) * quantity,
+        items: [{
+          productId: String(selectedProduct.id),
+          quantity,
+          costPrice: Number(selectedProduct.costPrice),
+          sellingPrice: Number(selectedProduct.sellingPrice)
+        }]
+      };
+    }
 
     setLoading(true);
     try {
       await api.post('/api/sales', payload);
-      setSaleForm({ productName: '', quantity: '', paymentMethod: 'UPI' });
+      setSaleForm({ productName: '', quantity: '', paymentMethod: 'UPI', isCustom: false, customPrice: '' });
       await fetchAllData();
       setSuccessModal({
         isOpen: true,
@@ -657,7 +680,7 @@ export default function App() {
             delay={2}
           >
             {salesList.map((s) => {
-              const itemNames = s.items?.map(i => i.product?.name).filter(Boolean).join(', ') || 'Item';
+              const itemNames = s.items?.map(i => i.productName || i.product?.name).filter(Boolean).join(', ') || 'Item';
               return (
                 <tr 
                   key={s.id}

@@ -19,7 +19,8 @@ export async function createSale(data: any) {
             quantity: item.quantity,
             costPrice: item.costPrice,
             sellingPrice: item.sellingPrice,
-            productId: item.productId
+            productId: item.productId || null,
+            productName: item.productName || null
           }))
         }
       },
@@ -30,6 +31,11 @@ export async function createSale(data: any) {
 
     // 2. Loop through the items and validate stock, then decrease the Product stock
     for (const item of items) {
+      if (!item.productId) {
+        // Skip stock deduction for custom ad-hoc items
+        continue;
+      }
+
       const product = await tx.product.findUnique({
         where: { id: item.productId }
       });
@@ -112,16 +118,18 @@ export async function deleteSale(id: string) {
       throw new Error("Sale not found");
     }
 
-    // Restore stock for sold products
+    // Restore stock for sold products that are tracked in inventory
     for (const item of sale.items) {
-      await tx.product.update({
-        where: { id: item.productId },
-        data: {
-          stock: {
-            increment: item.quantity
+      if (item.productId) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              increment: item.quantity
+            }
           }
-        }
-      });
+        });
+      }
     }
 
     // Delete sale items and sale

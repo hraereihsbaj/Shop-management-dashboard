@@ -22,13 +22,19 @@ export function initializeBot() {
   const bot = new TelegramBot(token, { polling: true });
   console.log("🤖 Telegram Bot is awake and listening...");
 
+  bot.on('polling_error', (error: any) => {
+    if (error.code === 'EFATAL' || error.message?.includes('fetch failed')) return;
+    console.warn("⚠️ Telegram Bot Polling Error:", error.message || error);
+  });
+
   // Global Authorization Middleware (Monkey patch processUpdate)
   const originalProcessUpdate = bot.processUpdate.bind(bot);
   bot.processUpdate = (update: any) => {
-    const adminId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+    const adminIdStr = process.env.TELEGRAM_ADMIN_CHAT_ID;
+    const adminIds = adminIdStr ? adminIdStr.split(',').map(id => id.trim()) : [];
     const chatId = update.message?.chat?.id || update.callback_query?.message?.chat?.id;
 
-    if (adminId && chatId && String(chatId) !== adminId) {
+    if (adminIds.length > 0 && chatId && !adminIds.includes(String(chatId))) {
       console.warn(`⛔ Unauthorized Telegram access attempt from chat ID: ${chatId}`);
       if (update.message?.chat?.id) {
         bot.sendMessage(chatId, "⛔ You are not authorized to use this bot.");
@@ -225,17 +231,30 @@ export function initializeBot() {
               });
 
           if (products.length === 0) {
-            pendingSaleByChat.delete(chatId);
-            return bot.sendMessage(chatId, `❌ No existing product found for "${value}". Please add the product first, then try the sale again.`);
+            pendingSale.data.productName = value;
+            pendingSale.data.isCustom = true;
+            pendingSale.step = 1.5;
+            return bot.sendMessage(chatId, `ℹ️ Product "${value}" not found in inventory. We'll log this as a custom item.\n\n💵 Please send the selling price (₹) for a single "${value}":`);
           }
 
-          pendingSale.data.productName = value;
+          pendingSale.data.productName = products[0].name;
+          pendingSale.data.productId = products[0].id;
           pendingSale.step = 2;
-          return bot.sendMessage(chatId, "🔢 Please send the quantity.");
+          return bot.sendMessage(chatId, `🔢 Product found: *${products[0].name}*. Please send the quantity.`, { parse_mode: "Markdown" });
         } catch (error) {
           pendingSaleByChat.delete(chatId);
           return bot.sendMessage(chatId, "❌ Failed to validate the product. Please try again.");
         }
+      }
+
+      if (pendingSale.step === 1.5) {
+        const price = Number(value);
+        if (!Number.isFinite(price) || price < 0) {
+          return bot.sendMessage(chatId, "⚠️ Please enter a valid non-negative selling price.");
+        }
+        pendingSale.data.customPrice = String(price);
+        pendingSale.step = 2;
+        return bot.sendMessage(chatId, "🔢 Please send the quantity.");
       }
 
       if (pendingSale.step === 2) {
@@ -258,44 +277,50 @@ export function initializeBot() {
         pendingSale.data.paymentMethod = value;
 
         try {
-          // Prefer exact name match, fall back to partial match
-          const productName = pendingSale.data.productName || "";
-          let exactMatch = await prisma.product.findFirst({
-            where: { name: { equals: productName, mode: "insensitive" }, isActive: true }
-          });
-
-          const products = exactMatch
-            ? [exactMatch]
-            : await prisma.product.findMany({
-                where: { name: { contains: productName, mode: "insensitive" }, isActive: true }
-              });
-
-          if (products.length === 0) {
-            pendingSaleByChat.delete(chatId);
-            return bot.sendMessage(chatId, `❌ No existing product found for "${productName}". Please add the product first, then try the sale again.`);
-          }
-
-          const product = products[0];
           const quantity = Number(pendingSale.data.quantity);
-
-          if (product.stock < quantity) {
+          const isCustom = pendingSale.data.isCustom;
+          
+          if (isCustom) {
+            const customPrice = Number(pendingSale.data.customPrice);
+            const productName = pendingSale.data.productName;
+            
+            await saleService.createSale({
+              paymentMethod: pendingSale.data.paymentMethod,
+              totalAmount: customPrice * quantity,
+              items: [{
+                productName: productName,
+                quantity,
+                costPrice: 0,
+                sellingPrice: customPrice
+              }]
+            });
             pendingSaleByChat.delete(chatId);
-            return bot.sendMessage(chatId, `⚠️ Not enough stock! You only have ${product.stock} left.`);
+            return bot.sendMessage(chatId, `✅ Custom sale complete! Sold ${quantity}x ${productName} for ₹${customPrice * quantity}`);
+          } else {
+            // Re-fetch product to get latest price for calculation
+            const product = await prisma.product.findUnique({
+              where: { id: pendingSale.data.productId }
+            });
+            
+            if (!product) {
+              pendingSaleByChat.delete(chatId);
+              return bot.sendMessage(chatId, `❌ Product no longer found.`);
+            }
+
+            await saleService.createSale({
+              paymentMethod: pendingSale.data.paymentMethod,
+              totalAmount: Number(product.sellingPrice) * quantity,
+              items: [{
+                productId: product.id,
+                quantity,
+                costPrice: Number(product.costPrice),
+                sellingPrice: Number(product.sellingPrice)
+              }]
+            });
+
+            pendingSaleByChat.delete(chatId);
+            return bot.sendMessage(chatId, `✅ Sale complete! Sold ${quantity}x ${product.name} for ₹${Number(product.sellingPrice) * quantity}`);
           }
-
-          await saleService.createSale({
-            paymentMethod: pendingSale.data.paymentMethod,
-            totalAmount: Number(product.sellingPrice) * quantity,
-            items: [{
-              productId: product.id,
-              quantity,
-              costPrice: Number(product.costPrice),
-              sellingPrice: Number(product.sellingPrice)
-            }]
-          });
-
-          pendingSaleByChat.delete(chatId);
-          return bot.sendMessage(chatId, `✅ Sale complete! Sold ${quantity}x ${product.name} for ₹${Number(product.sellingPrice) * quantity}`);
         } catch (error) {
           console.error("❌ Bot sale error:", error);
           pendingSaleByChat.delete(chatId);
@@ -379,6 +404,9 @@ export function initializeBot() {
     step: number;
     data: {
       productName?: string;
+      productId?: string;
+      isCustom?: boolean;
+      customPrice?: string;
       quantity?: string;
       paymentMethod?: string;
     };
@@ -557,7 +585,7 @@ export function initializeBot() {
       let message = `📊 *Sales List (${filterDate ? `Date: ${filterDate}` : sortOrder === "asc" ? "Oldest First ⬆️" : "Newest First ⬇️"}):*\n\n`;
       result.data.forEach((s: any) => {
         const dateStr = new Date(s.createdAt).toLocaleString();
-        const itemDetails = s.items.map((i: any) => `• ${i.quantity}x ${i.product?.name || 'Item'} | SP: ₹${i.sellingPrice} | CP: ₹${i.costPrice}`).join('\n   ');
+        const itemDetails = s.items.map((i: any) => `• ${i.quantity}x ${i.productName || i.product?.name || 'Item'} | SP: ₹${i.sellingPrice} | CP: ₹${i.costPrice}`).join('\n   ');
         message += `🔹 *ID:* \`${s.id}\` | *Total:* ₹${s.totalAmount}\n   Payment: ${s.paymentMethod}\n   Items:\n   ${itemDetails}\n   📅 Date: ${dateStr}\n\n`;
       });
       const salesMessage = message.trim();
@@ -841,7 +869,7 @@ export function initializeBot() {
 
       let itemsText = '';
       sale.items.forEach((item, idx) => {
-        itemsText += `• ${item.product?.name || 'Unknown'}: ${item.quantity} x ₹${item.sellingPrice} = ₹${(Number(item.sellingPrice || 0) * item.quantity)}\n`;
+        itemsText += `• ${item.productName || item.product?.name || 'Unknown'}: ${item.quantity} x ₹${item.sellingPrice} = ₹${(Number(item.sellingPrice || 0) * item.quantity)}\n`;
       });
 
       const message = `
