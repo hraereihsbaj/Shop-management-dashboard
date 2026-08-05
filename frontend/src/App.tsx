@@ -38,6 +38,7 @@ interface Product {
 
 interface SaleItem {
   quantity: number;
+  productName?: string;
   product?: { name: string };
 }
 
