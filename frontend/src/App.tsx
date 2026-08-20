@@ -462,6 +462,19 @@ export default function App() {
     }
   };
 
+  // ─── Authentication State ───
+  if (!isAuthenticated) {
+    return (
+      <Login 
+        onLogin={(token) => {
+          localStorage.setItem('shop_admin_token', token);
+          setError(''); // clear any existing errors
+          setIsAuthenticated(true);
+        }}
+      />
+    );
+  }
+
   // ─── Error State ───
   if (error) {
     return (
@@ -472,20 +485,15 @@ export default function App() {
           </div>
           <h2 className="text-lg font-bold text-gray-900 mb-2">Connection Error</h2>
           <p className="text-sm text-gray-500">{error}</p>
+          <button onClick={() => {
+            localStorage.removeItem('shop_admin_token');
+            setIsAuthenticated(false);
+            setError('');
+          }} className="mt-4 text-rose-500 text-sm font-medium hover:underline">
+            Click here to log out and try again
+          </button>
         </div>
       </div>
-    );
-  }
-
-  // ─── Authentication State ───
-  if (!isAuthenticated) {
-    return (
-      <Login 
-        onLogin={(token) => {
-          localStorage.setItem('shop_admin_token', token);
-          setIsAuthenticated(true);
-        }}
-      />
     );
   }
 
