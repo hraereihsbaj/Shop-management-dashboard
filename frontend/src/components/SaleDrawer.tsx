@@ -150,7 +150,7 @@ export default function SaleDrawer({ sale, onClose, onSaved }: SaleDrawerProps) 
             {isEditing ? (
               <select
                 value={form.paymentMethod}
-                onChange={(e) => setForm({ paymentMethod: e.target.value })}
+                onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
                 className="form-select text-sm font-bold py-1"
               >
                 <option value="UPI">UPI</option>

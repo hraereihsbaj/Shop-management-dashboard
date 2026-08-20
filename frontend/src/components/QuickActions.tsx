@@ -7,18 +7,18 @@ interface Product {
 
 interface QuickActionsProps {
   // Sale form
-  saleForm: { productName: string; quantity: string; paymentMethod: string; isCustom: boolean; customPrice: string };
-  setSaleForm: (f: { productName: string; quantity: string; paymentMethod: string; isCustom: boolean; customPrice: string }) => void;
+  saleForm: { productName: string; quantity: string; paymentMethod: string; isCustom: boolean; customPrice: string; date: string };
+  setSaleForm: (f: { productName: string; quantity: string; paymentMethod: string; isCustom: boolean; customPrice: string; date: string }) => void;
   handleAddSale: (e: React.FormEvent) => void;
   allProducts: Product[];
 
   // Expense form
-  expenseForm: { title: string; category: string; amount: string; notes: string };
-  setExpenseForm: (f: { title: string; category: string; amount: string; notes: string }) => void;
+  expenseForm: { title: string; category: string; amount: string; notes: string; date: string };
+  setExpenseForm: (f: { title: string; category: string; amount: string; notes: string; date: string }) => void;
   handleAddExpense: (e: React.FormEvent) => void;
 
-  productForm: { name: string; category: string; sellingPrice: string; costPrice: string; stock: string };
-  setProductForm: (f: { name: string; category: string; sellingPrice: string; costPrice: string; stock: string }) => void;
+  productForm: { name: string; category: string; sellingPrice: string; costPrice: string; stock: string; date: string };
+  setProductForm: (f: { name: string; category: string; sellingPrice: string; costPrice: string; stock: string; date: string }) => void;
   handleAddProduct: (e: React.FormEvent) => void;
 
   onOpenBulkImport: () => void;
