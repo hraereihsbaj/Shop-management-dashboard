@@ -38,7 +38,7 @@ export default function DataTable({
       style={{ animationDelay: `${delay * 0.1}s` }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
         <div className="flex items-center gap-2.5">
           <div className="p-1.5 bg-gray-100 rounded-lg">
             <Icon size={16} className="text-gray-500" />
@@ -51,13 +51,13 @@ export default function DataTable({
       </div>
 
       {/* Body */}
-      <div className="px-6 py-4">
+      <div className="px-3 sm:px-6 py-3 sm:py-4">
         {isEmpty ? (
           <p className="text-sm text-gray-400 py-8 text-center">{emptyMessage}</p>
         ) : (
           <>
-            <div className="overflow-x-auto -mx-6">
-              <div className="px-6 min-w-full inline-block align-middle">
+            <div className="overflow-x-auto -mx-3 sm:-mx-6">
+              <div className="px-3 sm:px-6 min-w-full inline-block align-middle">
                 <table className="data-table">
                   <thead>
                     <tr>

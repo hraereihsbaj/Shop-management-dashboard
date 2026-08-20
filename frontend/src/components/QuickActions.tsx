@@ -49,9 +49,9 @@ export default function QuickActions({
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
         {/* Sale Form */}
-        <div className="card p-6">
+        <div className="card p-4 sm:p-6">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="p-2 bg-indigo-50 rounded-lg">
               <ShoppingBag size={16} className="text-indigo-600" />
@@ -106,8 +106,8 @@ export default function QuickActions({
                 />
               </div>
             )}
-            <div className="grid grid-cols-5 gap-3">
-              <div className="col-span-2">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="col-span-1 sm:col-span-2">
                 <label htmlFor="sale-qty" className="block text-xs font-medium text-gray-500 mb-1.5">Qty</label>
                 <input
                   id="sale-qty"
@@ -120,7 +120,7 @@ export default function QuickActions({
                   onChange={(e) => setSaleForm({ ...saleForm, quantity: e.target.value })}
                 />
               </div>
-              <div className="col-span-3">
+              <div className="col-span-1 sm:col-span-3">
                 <label htmlFor="sale-payment" className="block text-xs font-medium text-gray-500 mb-1.5">Payment</label>
                 <select
                   id="sale-payment"
@@ -156,7 +156,7 @@ export default function QuickActions({
         </div>
 
         {/* Expense Form */}
-        <div className="card p-6">
+        <div className="card p-4 sm:p-6">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="p-2 bg-rose-50 rounded-lg">
               <Receipt size={16} className="text-rose-600" />
@@ -234,7 +234,7 @@ export default function QuickActions({
         </div>
 
         {/* Product Form */}
-        <div className="card p-6">
+        <div className="card p-4 sm:p-6">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="p-2 bg-emerald-50 rounded-lg">
               <Package size={16} className="text-emerald-600" />

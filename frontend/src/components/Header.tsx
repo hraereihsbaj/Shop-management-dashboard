@@ -51,8 +51,8 @@ export default function Header({
       </div>
 
       {/* Filter Bar */}
-      <div className="card px-4 py-3">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="card px-3 sm:px-4 py-2.5 sm:py-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Date Picker */}
           <div className="flex items-center gap-2">
             <CalendarDays size={15} className="text-gray-400 shrink-0" />

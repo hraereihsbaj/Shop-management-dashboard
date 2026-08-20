@@ -44,7 +44,7 @@ export default function DashboardChart({ data, period, onPeriodChange, loading }
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 mb-8 relative">
+    <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-8 relative">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
@@ -71,7 +71,7 @@ export default function DashboardChart({ data, period, onPeriodChange, loading }
       </div>
 
       {/* Chart Area */}
-      <div className="h-[350px] w-full">
+      <div className="h-[250px] sm:h-[350px] w-full">
         {loading ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="animate-pulse flex flex-col items-center gap-3">

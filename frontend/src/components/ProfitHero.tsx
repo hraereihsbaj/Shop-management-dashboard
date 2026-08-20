@@ -10,7 +10,7 @@ export default function ProfitHero({ netProfit, cogs, grossProfit }: ProfitHeroP
   const isPositive = netProfit >= 0;
 
   return (
-    <div className="card p-8 md:p-10 animate-slide-up" style={{ animationDelay: '0.15s' }}>
+    <div className="card p-5 sm:p-8 md:p-10 animate-slide-up" style={{ animationDelay: '0.15s' }}>
       <div className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
           <div className={`w-2 h-2 rounded-full ${isPositive ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`} />
@@ -19,7 +19,7 @@ export default function ProfitHero({ netProfit, cogs, grossProfit }: ProfitHeroP
           </span>
         </div>
 
-        <p className={`text-5xl md:text-6xl font-black tracking-tight ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
+        <p className={`text-3xl sm:text-5xl md:text-6xl font-black tracking-tight ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
           ₹{netProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
       </div>

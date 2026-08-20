@@ -46,19 +46,19 @@ export default function MetricCard({ title, value, icon: Icon, accentColor, dela
 
   return (
     <div
-      className={`card border-l-4 ${colors.border} p-5 animate-fade-in`}
+      className={`card border-l-4 ${colors.border} p-3 sm:p-5 animate-fade-in`}
       style={{ animationDelay: `${delay * 0.08}s` }}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 min-w-0">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
             {title}
           </p>
-          <p className={`text-2xl font-extrabold tracking-tight ${colors.value}`}>
+          <p className={`text-lg sm:text-2xl font-extrabold tracking-tight ${colors.value} truncate`}>
             {value}
           </p>
         </div>
-        <div className={`p-3 rounded-xl ${colors.bg}`}>
+        <div className={`p-2 sm:p-3 rounded-xl ${colors.bg} hidden sm:block shrink-0`}>
           <Icon size={22} className={colors.text} strokeWidth={2} />
         </div>
       </div>
