@@ -19,7 +19,17 @@ if (frontendUrl.endsWith('/')) {
 }
 
 app.use(cors({
-  origin: [frontendUrl, "http://localhost:5173"], // Always allow local dev for convenience
+  origin: function (origin, callback) {
+    // Allow if it matches exactly, or if it's a vercel preview branch, or if there's no origin (e.g. Postman)
+    if (!origin || 
+        origin === frontendUrl || 
+        origin === "http://localhost:5173" || 
+        origin.endsWith(".vercel.app")) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(helmet());
