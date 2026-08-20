@@ -3,7 +3,14 @@ import jwt from "jsonwebtoken";
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
-  const jwtSecret = process.env.JWT_SECRET || "default_secret";
+  const jwtSecret = process.env.JWT_SECRET;
+
+  if (!jwtSecret) {
+    return res.status(500).json({
+      success: false,
+      message: "Server configuration error: JWT_SECRET is not set."
+    });
+  }
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({
