@@ -4,10 +4,12 @@ import { ShoppingBag, CreditCard, Box, TrendingUp, Pencil, Save, X as XIcon, Loa
 import api from '../api';
 
 interface SaleItem {
+  id?: string;
   quantity: number;
   costPrice?: number;
   sellingPrice?: number;
   productName?: string;
+  productId?: string;
   product?: { name: string; category?: string };
 }
 
@@ -16,6 +18,7 @@ interface Sale {
   totalAmount: number;
   paymentMethod: string; 
   items: SaleItem[]; 
+  saleDate: string;
   createdAt: string; 
 }
 
@@ -29,11 +32,15 @@ export default function SaleDrawer({ sale, onClose, onSaved }: SaleDrawerProps) 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [form, setForm] = useState({ paymentMethod: '' });
+  const [form, setForm] = useState<{ paymentMethod: string; saleDate: string; items: SaleItem[] }>({ paymentMethod: '', saleDate: '', items: [] });
 
   useEffect(() => {
     if (sale) {
-      setForm({ paymentMethod: sale.paymentMethod });
+      setForm({ 
+        paymentMethod: sale.paymentMethod,
+        saleDate: new Date(sale.saleDate || sale.createdAt).toISOString().slice(0, 16),
+        items: JSON.parse(JSON.stringify(sale.items))
+      });
       setIsEditing(false);
       setShowSuccess(false);
     }
@@ -41,15 +48,21 @@ export default function SaleDrawer({ sale, onClose, onSaved }: SaleDrawerProps) 
 
   if (!sale) return null;
 
-  const totalQuantity = sale.items?.reduce((sum, i) => sum + i.quantity, 0) || 0;
-  const totalCost = sale.items?.reduce((sum, i) => sum + ((i.costPrice || 0) * i.quantity), 0) || 0;
-  const saleProfit = Number(sale.totalAmount) - totalCost;
+  const itemsToCalculate = isEditing ? form.items : sale.items;
+  const totalQuantity = itemsToCalculate?.reduce((sum, i) => sum + i.quantity, 0) || 0;
+  const totalCost = itemsToCalculate?.reduce((sum, i) => sum + ((i.costPrice || 0) * i.quantity), 0) || 0;
+  
+  // Calculate total amount based on the items currently being viewed/edited
+  const currentTotalAmount = itemsToCalculate?.reduce((sum, i) => sum + ((i.sellingPrice || 0) * i.quantity), 0) || 0;
+  const saleProfit = currentTotalAmount - totalCost;
 
   const handleSave = async () => {
     setSaving(true);
     try {
       await api.patch(`/api/sales/${sale.id}`, {
         paymentMethod: form.paymentMethod,
+        saleDate: new Date(form.saleDate).toISOString(),
+        items: form.items
       });
       setIsEditing(false);
       setShowSuccess(true);
@@ -63,7 +76,11 @@ export default function SaleDrawer({ sale, onClose, onSaved }: SaleDrawerProps) 
   };
 
   const handleCancel = () => {
-    setForm({ paymentMethod: sale.paymentMethod });
+    setForm({ 
+      paymentMethod: sale.paymentMethod,
+      saleDate: new Date(sale.saleDate || sale.createdAt).toISOString().slice(0, 16),
+      items: JSON.parse(JSON.stringify(sale.items))
+    });
     setIsEditing(false);
   };
 
@@ -86,7 +103,16 @@ export default function SaleDrawer({ sale, onClose, onSaved }: SaleDrawerProps) 
           </div>
           <div className="flex-1">
             <h3 className="text-xl font-black text-gray-900">Sale #{String(sale.id).slice(-6)}</h3>
-            <span className="badge bg-gray-100 text-gray-600 mt-1">{new Date(sale.createdAt).toLocaleString()}</span>
+            {isEditing ? (
+              <input
+                type="datetime-local"
+                value={form.saleDate}
+                onChange={(e) => setForm({ ...form, saleDate: e.target.value })}
+                className="form-input text-xs mt-1 py-1 px-2"
+              />
+            ) : (
+              <span className="badge bg-gray-100 text-gray-600 mt-1">{new Date(sale.saleDate || sale.createdAt).toLocaleString()}</span>
+            )}
           </div>
           {!isEditing && (
             <button
@@ -106,7 +132,7 @@ export default function SaleDrawer({ sale, onClose, onSaved }: SaleDrawerProps) 
           <div className="p-4 bg-gray-50 rounded-xl">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Amount</p>
             <p className="text-2xl font-bold text-indigo-600">
-              ₹{Number(sale.totalAmount).toFixed(2)}
+              ₹{currentTotalAmount.toFixed(2)}
             </p>
           </div>
           <div className="p-4 bg-gray-50 rounded-xl">
@@ -153,17 +179,52 @@ export default function SaleDrawer({ sale, onClose, onSaved }: SaleDrawerProps) 
             Items in this Sale
           </h4>
           <div className="space-y-3">
-            {sale.items?.map((item, idx) => {
+            {itemsToCalculate?.map((item, idx) => {
               const itemTotal = (item.sellingPrice || 0) * item.quantity;
+              const isCustom = !item.productId;
               
               return (
                 <div key={idx} className="flex justify-between items-center p-4 bg-white border border-gray-100 shadow-sm rounded-xl">
-                  <div>
-                    <p className="font-bold text-gray-900">{item.productName || item.product?.name || 'Unknown Product'}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {item.quantity} x ₹{Number(item.sellingPrice || 0).toFixed(2)}
-                    </p>
-                  </div>
+                  {isEditing && isCustom ? (
+                    <div className="flex-1 mr-4 space-y-2">
+                      <input
+                        type="text"
+                        value={item.productName || ''}
+                        onChange={(e) => {
+                          const newItems = [...form.items];
+                          newItems[idx].productName = e.target.value;
+                          setForm({ ...form, items: newItems });
+                        }}
+                        placeholder="Custom item name"
+                        className="form-input text-sm font-bold w-full"
+                      />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">{item.quantity} x ₹</span>
+                        <input
+                          type="number"
+                          value={item.sellingPrice || 0}
+                          onChange={(e) => {
+                            const newItems = [...form.items];
+                            newItems[idx].sellingPrice = parseFloat(e.target.value);
+                            setForm({ ...form, items: newItems });
+                          }}
+                          className="form-input text-xs w-24"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="font-bold text-gray-900">
+                        {item.productName || item.product?.name || 'Unknown Product'}
+                        {isCustom && <span className="ml-2 text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">Custom</span>}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {item.quantity} x ₹{Number(item.sellingPrice || 0).toFixed(2)}
+                      </p>
+                    </div>
+                  )}
                   <div className="text-right">
                     <p className="font-bold text-indigo-600">₹{itemTotal.toFixed(2)}</p>
                   </div>

@@ -23,7 +23,13 @@ export default function ExpenseDrawer({ expense, onClose, onSaved }: ExpenseDraw
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [form, setForm] = useState({ title: '', category: '', amount: '', notes: '' });
+  const [form, setForm] = useState({
+    title: '',
+    category: '',
+    amount: '',
+    notes: '',
+    expenseDate: '',
+  });
 
   useEffect(() => {
     if (expense) {
@@ -32,6 +38,7 @@ export default function ExpenseDrawer({ expense, onClose, onSaved }: ExpenseDraw
         category: expense.category || '',
         amount: String(expense.amount),
         notes: expense.notes || '',
+        expenseDate: new Date(expense.expenseDate).toISOString().slice(0, 16),
       });
       setIsEditing(false);
       setShowSuccess(false);
@@ -48,6 +55,7 @@ export default function ExpenseDrawer({ expense, onClose, onSaved }: ExpenseDraw
         category: form.category.trim(),
         amount: parseFloat(form.amount),
         notes: form.notes.trim() || null,
+        expenseDate: new Date(form.expenseDate).toISOString(),
       });
       setIsEditing(false);
       setShowSuccess(true);
@@ -66,6 +74,7 @@ export default function ExpenseDrawer({ expense, onClose, onSaved }: ExpenseDraw
       category: expense.category || '',
       amount: String(expense.amount),
       notes: expense.notes || '',
+      expenseDate: new Date(expense.expenseDate).toISOString().slice(0, 16),
     });
     setIsEditing(false);
   };
@@ -148,7 +157,16 @@ export default function ExpenseDrawer({ expense, onClose, onSaved }: ExpenseDraw
           <div className="flex items-center gap-2 text-sm">
             <Calendar size={16} className="text-gray-400" />
             <span className="font-medium text-gray-600">Date:</span>
-            <span className="font-bold text-gray-900">{new Date(expense.expenseDate).toLocaleDateString()}</span>
+            {isEditing ? (
+              <input
+                type="datetime-local"
+                value={form.expenseDate}
+                onChange={(e) => setForm({ ...form, expenseDate: e.target.value })}
+                className="form-input text-sm font-bold text-gray-900 w-full"
+              />
+            ) : (
+              <span className="font-bold text-gray-900">{new Date(expense.expenseDate).toLocaleDateString()}</span>
+            )}
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Tag size={16} className="text-gray-400" />

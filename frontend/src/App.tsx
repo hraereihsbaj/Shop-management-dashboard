@@ -47,6 +47,7 @@ interface Sale {
   totalAmount: number;
   paymentMethod: string; 
   items: SaleItem[]; 
+  saleDate: string;
   createdAt: string; 
 }
 
@@ -111,9 +112,9 @@ export default function App() {
   const [salesPagination, setSalesPagination] = useState<PaginationInfo>({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 1 });
   const [expensesPagination, setExpensesPagination] = useState<PaginationInfo>({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 1 });
 
-  const [expenseForm, setExpenseForm] = useState({ title: '', category: '', amount: '', notes: '' });
-  const [saleForm, setSaleForm] = useState({ productName: '', quantity: '', paymentMethod: 'UPI', isCustom: false, customPrice: '' });
-  const [productForm, setProductForm] = useState({ name: '', category: '', sellingPrice: '', costPrice: '', stock: '' });
+  const [expenseForm, setExpenseForm] = useState({ title: '', category: '', amount: '', notes: '', date: '' });
+  const [saleForm, setSaleForm] = useState({ productName: '', quantity: '', paymentMethod: 'UPI', isCustom: false, customPrice: '', date: '' });
+  const [productForm, setProductForm] = useState({ name: '', category: '', sellingPrice: '', costPrice: '', stock: '', date: '' });
 
   const [selectedMonth, setSelectedMonth] = useState<string>(''); // '' = All Time
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
@@ -318,7 +319,8 @@ export default function App() {
       title: expenseForm.title.trim(),
       category: expenseForm.category.trim(),
       amount: Number(expenseForm.amount),
-      notes: expenseForm.notes.trim() || undefined
+      notes: expenseForm.notes.trim() || undefined,
+      ...(expenseForm.date ? { expenseDate: new Date(expenseForm.date).toISOString() } : {})
     };
 
     if (!payload.title || !payload.category || Number.isNaN(payload.amount) || payload.amount <= 0) {
@@ -329,7 +331,7 @@ export default function App() {
     setLoading(true);
     try {
       await api.post('/api/expenses', payload);
-      setExpenseForm({ title: '', category: '', amount: '', notes: '' });
+      setExpenseForm({ title: '', category: '', amount: '', notes: '', date: '' });
       await fetchAllData();
       setSuccessModal({
         isOpen: true,
@@ -378,7 +380,8 @@ export default function App() {
           quantity,
           costPrice: 0,
           sellingPrice: customPrice
-        }]
+        }],
+        ...(saleForm.date ? { saleDate: new Date(saleForm.date).toISOString() } : {})
       };
     } else {
       const selectedProduct = allProducts.find((p) => p.name.toLowerCase() === productName.toLowerCase());
@@ -396,14 +399,15 @@ export default function App() {
           quantity,
           costPrice: Number(selectedProduct.costPrice),
           sellingPrice: Number(selectedProduct.sellingPrice)
-        }]
+        }],
+        ...(saleForm.date ? { saleDate: new Date(saleForm.date).toISOString() } : {})
       };
     }
 
     setLoading(true);
     try {
       await api.post('/api/sales', payload);
-      setSaleForm({ productName: '', quantity: '', paymentMethod: 'UPI', isCustom: false, customPrice: '' });
+      setSaleForm({ productName: '', quantity: '', paymentMethod: 'UPI', isCustom: false, customPrice: '', date: '' });
       await fetchAllData();
       setSuccessModal({
         isOpen: true,
@@ -426,7 +430,8 @@ export default function App() {
       category: productForm.category.trim(),
       costPrice: Number(productForm.costPrice),
       sellingPrice: Number(productForm.sellingPrice),
-      stock: Number(productForm.stock)
+      stock: Number(productForm.stock),
+      ...(productForm.date ? { createdAt: new Date(productForm.date).toISOString() } : {})
     };
 
     if (!productForm.name.trim() || !productForm.category.trim() || !productForm.sellingPrice || !productForm.costPrice || productForm.stock === '') {
@@ -442,7 +447,7 @@ export default function App() {
     setLoading(true);
     try {
       await api.post('/api/products', payload);
-      setProductForm({ name: '', category: '', sellingPrice: '', costPrice: '', stock: '' });
+      setProductForm({ name: '', category: '', sellingPrice: '', costPrice: '', stock: '', date: '' });
       await fetchAllData();
       setSuccessModal({
         isOpen: true,

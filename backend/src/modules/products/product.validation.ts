@@ -9,7 +9,9 @@ export const createProductSchema = z.object({
 
   sellingPrice: z.number().positive("Selling price must be greater than 0"),
 
-  stock: z.number().int().min(0)
+  stock: z.number().int().min(0),
+
+  createdAt: z.string().datetime().optional(),
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
@@ -21,4 +23,5 @@ export const updateProductSchema = z.object({
   costPrice: z.number().positive("Cost price must be greater than 0").optional(),
   sellingPrice: z.number().positive("Selling price must be greater than 0").optional(),
   stock: z.number().int().min(0).optional(),
+  createdAt: z.string().datetime().optional(),
 });

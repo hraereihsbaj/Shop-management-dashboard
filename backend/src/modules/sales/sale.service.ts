@@ -138,11 +138,47 @@ export async function deleteSale(id: string) {
   });
 }
 
-export async function updateSale(id: string, data: { paymentMethod?: string }) {
-  return await prisma.sale.update({
-    where: { id },
-    data,
-    include: { items: { include: { product: true } } }
+export async function updateSale(id: string, data: { paymentMethod?: string, saleDate?: string, items?: any[] }) {
+  return prisma.$transaction(async (tx) => {
+    let totalAmountChange = 0;
+    
+    if (data.items && data.items.length > 0) {
+      for (const item of data.items) {
+        if (item.id) {
+          const existingItem = await tx.saleItem.findUnique({ where: { id: item.id } });
+          if (existingItem) {
+            const priceDiff = (Number(item.sellingPrice) - Number(existingItem.sellingPrice)) * existingItem.quantity;
+            totalAmountChange += priceDiff;
+            
+            await tx.saleItem.update({
+              where: { id: item.id },
+              data: {
+                productName: item.productName,
+                sellingPrice: item.sellingPrice
+              }
+            });
+          }
+        }
+      }
+    }
+
+    const sale = await tx.sale.findUnique({ where: { id } });
+    if (!sale) throw new Error("Sale not found");
+
+    const updateData: any = {};
+    if (data.paymentMethod) updateData.paymentMethod = data.paymentMethod;
+    if (data.saleDate) updateData.saleDate = new Date(data.saleDate);
+    if (totalAmountChange !== 0) updateData.totalAmount = Number(sale.totalAmount) + totalAmountChange;
+
+    if (Object.keys(updateData).length > 0) {
+      return await tx.sale.update({
+        where: { id },
+        data: updateData,
+        include: { items: { include: { product: true } } }
+      });
+    }
+
+    return await tx.sale.findUnique({ where: { id }, include: { items: { include: { product: true } } } });
   });
 }
 

@@ -134,6 +134,16 @@ export default function QuickActions({
                 </select>
               </div>
             </div>
+            <div>
+              <label htmlFor="sale-date" className="block text-xs font-medium text-gray-500 mb-1.5">Date (Optional)</label>
+              <input
+                id="sale-date"
+                type="datetime-local"
+                className="form-input"
+                value={saleForm.date}
+                onChange={(e) => setSaleForm({ ...saleForm, date: e.target.value })}
+              />
+            </div>
             <button
               type="submit"
               disabled={!saleForm.productName.trim() || !saleForm.quantity || Number(saleForm.quantity) <= 0}
@@ -200,6 +210,16 @@ export default function QuickActions({
                 className="form-input"
                 value={expenseForm.notes}
                 onChange={(e) => setExpenseForm({ ...expenseForm, notes: e.target.value })}
+              />
+            </div>
+            <div>
+              <label htmlFor="expense-date" className="block text-xs font-medium text-gray-500 mb-1.5">Date (Optional)</label>
+              <input
+                id="expense-date"
+                type="datetime-local"
+                className="form-input"
+                value={expenseForm.date}
+                onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })}
               />
             </div>
             <button
@@ -287,6 +307,16 @@ export default function QuickActions({
                 className="form-input"
                 value={productForm.stock}
                 onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
+              />
+            </div>
+            <div>
+              <label htmlFor="product-date" className="block text-xs font-medium text-gray-500 mb-1.5">Date (Optional)</label>
+              <input
+                id="product-date"
+                type="datetime-local"
+                className="form-input"
+                value={productForm.date}
+                onChange={(e) => setProductForm({ ...productForm, date: e.target.value })}
               />
             </div>
             <button

@@ -27,7 +27,7 @@ export default function ProductDrawer({ product, onClose, onSaved }: ProductDraw
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [form, setForm] = useState({ name: '', category: '', sellingPrice: '', costPrice: '', stock: '' });
+  const [form, setForm] = useState({ name: '', category: '', sellingPrice: '', costPrice: '', stock: '', createdAt: '' });
 
   useEffect(() => {
     if (product) {
@@ -37,6 +37,7 @@ export default function ProductDrawer({ product, onClose, onSaved }: ProductDraw
         sellingPrice: String(product.sellingPrice),
         costPrice: String(product.costPrice),
         stock: String(product.stock),
+        createdAt: new Date(product.createdAt).toISOString().slice(0, 16),
       });
       setIsEditing(false);
       setShowSuccess(false);
@@ -54,6 +55,7 @@ export default function ProductDrawer({ product, onClose, onSaved }: ProductDraw
         sellingPrice: parseFloat(form.sellingPrice),
         costPrice: parseFloat(form.costPrice),
         stock: parseInt(form.stock),
+        createdAt: new Date(form.createdAt).toISOString(),
       });
       setIsEditing(false);
       setShowSuccess(true);
@@ -73,6 +75,7 @@ export default function ProductDrawer({ product, onClose, onSaved }: ProductDraw
       sellingPrice: String(product.sellingPrice),
       costPrice: String(product.costPrice),
       stock: String(product.stock),
+      createdAt: new Date(product.createdAt).toISOString().slice(0, 16),
     });
     setIsEditing(false);
   };
@@ -241,8 +244,20 @@ export default function ProductDrawer({ product, onClose, onSaved }: ProductDraw
 
         {/* Meta */}
         <div className="text-xs text-gray-400 space-y-1">
-          <p>Created: {new Date(product.createdAt).toLocaleString()}</p>
-          {product.updatedAt && <p>Last Updated: {new Date(product.updatedAt).toLocaleString()}</p>}
+          {isEditing ? (
+            <div className="flex items-center gap-2">
+              <span>Created:</span>
+              <input
+                type="datetime-local"
+                value={form.createdAt}
+                onChange={(e) => setForm({ ...form, createdAt: e.target.value })}
+                className="form-input text-xs py-1 px-2"
+              />
+            </div>
+          ) : (
+            <p>Created: {new Date(product.createdAt).toLocaleString()}</p>
+          )}
+          {product.updatedAt && !isEditing && <p>Last Updated: {new Date(product.updatedAt).toLocaleString()}</p>}
         </div>
 
         {/* Edit Action Buttons */}

@@ -18,3 +18,15 @@ export const createSaleSchema = z.object({
   saleDate: z.string().datetime().optional(),
   items: z.array(saleItemSchema).min(1, "Sale must contain at least one item")
 });
+
+const updateSaleItemSchema = z.object({
+  id: z.string(),
+  productName: z.string(),
+  sellingPrice: z.number().nonnegative(),
+});
+
+export const updateSaleSchema = z.object({
+  paymentMethod: z.string().min(1).optional(),
+  saleDate: z.string().datetime().optional(),
+  items: z.array(updateSaleItemSchema).optional(),
+});
