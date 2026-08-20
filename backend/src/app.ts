@@ -12,9 +12,14 @@ import { requireAuth } from "./middleware/auth.middleware.js";
 
 const app = express();
 
-const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+// Clean up the frontend URL (remove whitespace and trailing slashes)
+let frontendUrl = (process.env.FRONTEND_URL || "http://localhost:5173").trim();
+if (frontendUrl.endsWith('/')) {
+  frontendUrl = frontendUrl.slice(0, -1);
+}
+
 app.use(cors({
-  origin: frontendUrl,
+  origin: [frontendUrl, "http://localhost:5173"], // Always allow local dev for convenience
   credentials: true,
 }));
 app.use(helmet());
